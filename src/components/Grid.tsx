@@ -1,5 +1,5 @@
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
-import React, { ReactNode, RefObject, useEffect } from 'react'
+import React, { ReactNode, RefObject, useEffect, Key } from 'react'
 import {
   Cell,
   Column,
@@ -39,8 +39,8 @@ export const Grid = <T extends any>({
 }: {
   data: T[]
   columns: Column<T, any, any>[]
-  outerRef: RefObject<HTMLDivElement>
-  innerRef: RefObject<HTMLDivElement>
+  outerRef: RefObject<HTMLDivElement | null>
+  innerRef: RefObject<HTMLDivElement | null>
   columnWidths?: number[]
   hasStickyRightColumn: boolean
   displayHeight: number
@@ -67,11 +67,12 @@ export const Grid = <T extends any>({
     getScrollElement: () => outerRef.current,
     paddingStart: headerRowHeight,
     estimateSize: (index) => rowHeight(index).height,
-    getItemKey: (index: number): React.Key => {
+    getItemKey: (index: number): string => {
       if (rowKey && index > 0) {
         const row = data[index - 1]
         if (typeof rowKey === 'function') {
-          return rowKey({ rowData: row, rowIndex: index })
+          const key = rowKey({ rowData: row, rowIndex: index })
+          return typeof key === 'number' ? String(key) : key
         } else if (
           typeof rowKey === 'string' &&
           row instanceof Object &&
@@ -79,11 +80,11 @@ export const Grid = <T extends any>({
         ) {
           const key = row[rowKey as keyof T]
           if (typeof key === 'string' || typeof key === 'number') {
-            return key
+            return typeof key === 'number' ? String(key) : key
           }
         }
       }
-      return index
+      return String(index)
     },
     overscan: 5,
   })
@@ -93,7 +94,10 @@ export const Grid = <T extends any>({
     getScrollElement: () => outerRef.current,
     estimateSize: (index) => columnWidths?.[index] ?? 100,
     horizontal: true,
-    getItemKey: (index: number): React.Key => columns[index].id ?? index,
+    getItemKey: (index: number): string => {
+      const id = columns[index].id
+      return id ?? String(index)
+    },
     overscan: 1,
     rangeExtractor: (range) => {
       const result = defaultRangeExtractor(range)
