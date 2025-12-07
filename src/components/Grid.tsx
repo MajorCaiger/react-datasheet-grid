@@ -1,5 +1,5 @@
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
-import React, { ReactNode, RefObject, useEffect, Key } from 'react'
+import React, { ReactNode, RefObject, useEffect } from 'react'
 import {
   Cell,
   Column,
